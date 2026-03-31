@@ -1,4 +1,4 @@
 FROM nginx:stable-alpine
 COPY public/ /usr/share/nginx/html
-EXPOSE 80
+# 80 portu otomatik açılır
 CMD ["nginx", "-g", "daemon off;"]
