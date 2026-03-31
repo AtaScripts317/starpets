@@ -1,22 +1,13 @@
 FROM node:18-alpine
 
-# PowerShell Core (pwsh) kur
-RUN apk add --no-cache \
-    curl \
-    ca-certificates \
-    && curl -L https://github.com/PowerShell/PowerShell/releases/download/v7.4.0/powershell-7.4.0-linux-alpine-x64.tar.gz -o /tmp/powershell.tar.gz \
-    && mkdir -p /opt/microsoft/powershell/7 \
-    && tar zxf /tmp/powershell.tar.gz -C /opt/microsoft/powershell/7 \
-    && chmod +x /opt/microsoft/powershell/7/pwsh \
-    && ln -s /opt/microsoft/powershell/7/pwsh /usr/bin/pwsh \
-    && rm /tmp/powershell.tar.gz
+# Sadece Nginx ve Cloud code için gerekli paketler
+RUN apk add --no-cache nginx
 
 # Cloud code
 WORKDIR /app
 COPY cloud/ ./cloud/
 
-# Nginx kur
-RUN apk add --no-cache nginx
+# Public dosyalar
 COPY public/ /usr/share/nginx/html
 
 # Nginx config
