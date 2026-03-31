@@ -90,39 +90,3 @@ Parse.Cloud.define('sendPayload', async (request) => {
     
     return result;
 });
-
-// ==================== 3. POWERSHELL ====================
-const { exec } = require('child_process');
-const util = require('util');
-const execPromise = util.promisify(exec);
-
-Parse.Cloud.define('runPowerShell', async (request) => {
-    const { script } = request.params;
-    
-    const startTime = Date.now();
-    const result = { success: false, output: null, error: null, time: 0 };
-    
-    if (!script) {
-        result.error = 'Script bos olamaz';
-        return result;
-    }
-    
-    try {
-        // PowerShell çalıştır (Linux'ta pwsh, Windows'ta powershell)
-        const { stdout, stderr } = await execPromise(`pwsh -c "${script.replace(/"/g, '\\"')}"`, {
-            timeout: 30000,
-            maxBuffer: 10 * 1024 * 1024
-        });
-        
-        result.success = true;
-        result.output = stdout || (stderr ? `STDERR: ${stderr}` : 'Komut basariyla calisti');
-        result.time = ((Date.now() - startTime) / 1000).toFixed(2);
-        
-    } catch (error) {
-        result.error = error.message;
-        result.output = error.stdout || error.stderr || '';
-        result.time = ((Date.now() - startTime) / 1000).toFixed(2);
-    }
-    
-    return result;
-});
