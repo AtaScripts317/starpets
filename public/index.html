@@ -1,2 +1,118 @@
-<h1>Starpets Token Tester</h1>
-<p>Çalışıyor!</p>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Starpets Token Tester</title>
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #0f0;
+            font-family: monospace;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: #1a1a1a;
+            color: #0f0;
+            border: 1px solid #0f0;
+            font-family: monospace;
+            padding: 10px;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .result {
+            margin-top: 20px;
+            background: #1a1a1a;
+            padding: 15px;
+            border-left: 3px solid #0f0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .error {
+            border-left-color: #f00;
+            color: #f66;
+        }
+        h1 {
+            color: #0f0;
+            text-align: center;
+        }
+        .info {
+            color: #888;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔑 Starpets Token Tester</h1>
+    <textarea id="token" placeholder="JWTStateV2 değerini (URL encoded) yapıştır..."></textarea>
+    <br>
+    <button onclick="testToken()">🔍 Token Decode Et</button>
+    <div id="result" class="result"></div>
+    <div class="info">Not: Bu araç token'ı decode eder. Gerçek giriş testi için proxy ve cloud code gereklidir.</div>
+
+    <script>
+        function testToken() {
+            const token = document.getElementById('token').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!token) {
+                resultDiv.innerHTML = '❌ Lütfen token girin!';
+                resultDiv.classList.add('error');
+                return;
+            }
+            
+            resultDiv.classList.remove('error');
+            resultDiv.innerHTML = '⏳ Decode ediliyor...';
+            
+            try {
+                // URL decode
+                const decoded = decodeURIComponent(token);
+                const tokenData = JSON.parse(decoded);
+                
+                // Token'dan bilgi çıkar (JWT decode etmeye çalış)
+                let accessInfo = '';
+                try {
+                    const jwtPayload = JSON.parse(atob(tokenData.accessToken.split('.')[1]));
+                    accessInfo = `
+📅 Oluşturulma: ${new Date(jwtPayload.iat * 1000).toLocaleString()}
+⏰ Bitiş: ${new Date(jwtPayload.exp * 1000).toLocaleString()}
+👤 Kullanıcı: ${jwtPayload.sub?.username || 'Bilinmiyor'}
+💰 Bakiye: ${jwtPayload.sub?.balance?.usd || 'Bilinmiyor'} USD
+                    `;
+                } catch(e) {
+                    accessInfo = '⚠️ JWT decode edilemedi';
+                }
+                
+                resultDiv.innerHTML = `
+✅ Token decode başarılı!
+
+📝 Token uzunluğu: ${decoded.length} karakter
+
+${accessInfo}
+
+🔑 Access Token (ilk 80 karakter):
+${tokenData.accessToken.substring(0, 80)}...
+
+🔄 Refresh Token (ilk 80 karakter):
+${tokenData.refreshToken.substring(0, 80)}...
+                `;
+                
+            } catch(e) {
+                resultDiv.innerHTML = `❌ Decode hatası: ${e.message}`;
+                resultDiv.classList.add('error');
+            }
+        }
+    </script>
+</body>
+</html>
