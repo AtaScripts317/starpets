@@ -1,25 +1,17 @@
-FROM python:3.11-slim
+FROM node:18-alpine
 
-# Python proxy için
-WORKDIR /proxy
-COPY proxy/proxy_server.py .
-RUN pip install aiohttp
-
-# Nginx ve Node.js kur
-RUN apt-get update && apt-get install -y curl nginx
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-RUN apt-get install -y nodejs
-
-# Cloud code ve public dosyaları
+# Cloud code için
 WORKDIR /app
 COPY cloud/ ./cloud/
-COPY public/ ./public/
 
-# Nginx yapılandırması - public dosyaları göster
-RUN rm /etc/nginx/sites-enabled/default
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Nginx kur
+RUN apk add --no-cache nginx
+COPY public/ /usr/share/nginx/html
 
-# Tüm servisleri başlat
-CMD ["sh", "-c", "nginx -g 'daemon off;' & python /proxy/proxy_server.py & node -e \"console.log('Cloud code ready'); setTimeout(()=>{}, 9999999)\""]
+# Nginx config
+RUN echo 'server { listen 80; root /usr/share/nginx/html; index index.html; location / { try_files $uri $uri/ =404; } }' > /etc/nginx/http.d/default.conf
 
-EXPOSE 80 6321 6464 8080
+EXPOSE 80
+
+# Nginx ve cloud code'u başlat
+CMD ["sh", "-c", "nginx -g 'daemon off;' & node -e \"console.log('Cloud code ready'); setTimeout(()=>{}, 9999999)\""]
